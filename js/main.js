@@ -2,7 +2,9 @@
 const headers = {
     'Content-Type': 'application/json',
     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdG9scXB4Y3l1eXBxdG1uemlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU2MDMyNTYsImV4cCI6MTk2MTE3OTI1Nn0.uzSvnkm6SV3kt97XytwcnISZlGeX17gVQwClv34vEWQ',
-    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdG9scXB4Y3l1eXBxdG1uemlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU2MDMyNTYsImV4cCI6MTk2MTE3OTI1Nn0.uzSvnkm6SV3kt97XytwcnISZlGeX17gVQwClv34vEWQ'
+    'Authorization': 'Bearer' +
+        ' eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdG9scXB4Y3l1eXBxdG1uemlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU2MDMyNTYsImV4cCI6MTk2MTE3OTI1Nn0.uzSvnkm6SV3kt97XytwcnISZlGeX17gVQwClv34vEWQ',
+    'Range': '0-9'
 };
 
 Vue.createApp({
@@ -16,13 +18,22 @@ Vue.createApp({
             isLoading: false,
             peliculasEditables: -1,
             editarNombre: '',
-            editarDuracion: ''
+            editarDuracion: '',
+            pag: 1,
+            numeroResultadosPorPagina: 5,
         }
     },
     methods: {
+        getHeaders() {
+            const rangoInicio = (this.pag - 1) * this.numeroResultadosPorPagina;
+            const rangoFinal = rangoInicio + this.numeroResultadosPorPagina;
+            let headersNuevoRango = JSON.parse(JSON.stringify(headers));
+            headersNuevoRango.Range = `${rangoInicio}-${rangoFinal}`;
+            return headersNuevoRango;
+        },
         getPeliculas: async function () {
             this.isLoading = true;
-            const fetchPeliculas = await fetch(`${this.APIUrl}?select=*`, { headers });
+            const fetchPeliculas = await fetch(`${this.APIUrl}?select=*`, { headers: this.getHeaders() });
             this.peliculas = await fetchPeliculas.json();
             this.isLoading = false;
         },
@@ -33,7 +44,7 @@ Vue.createApp({
             // Anyadir la pelicula a la base de datos
             const fetchPeliculas = await fetch(this.APIUrl,
                 {
-                    headers: headers,
+                    headers: this.getHeaders(),
                     method: 'POST',
                     body: JSON.stringify({"name": this.nuevoNombre, "duration": this.nuevaDuracion})
                 }
@@ -49,7 +60,7 @@ Vue.createApp({
             // Borramos de la base de datos
             await fetch(`${this.APIUrl}?id=eq.${id}`,
                 {
-                    headers: headers,
+                    headers: this.getHeaders(),
                     method: 'DELETE'
                 }
             );
@@ -71,7 +82,7 @@ Vue.createApp({
             this.peliculasEditables = -1;
             const fetchPeliculas = await fetch(`${this.APIUrl}?id=eq.${id}`,
                 {
-                    headers: headers,
+                    headers: this.getHeaders(),
                     method: 'PATCH',
                     body: JSON.stringify({"name": this.editarNombre, "duration": this.editarDuracion})
                 }
