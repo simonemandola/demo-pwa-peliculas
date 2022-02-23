@@ -1,28 +1,95 @@
-// constantes
+// Constantes
 const headers = {
-    "Content-Type": "application/json",
-        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kZnBwa252dnFjYm9iaWRmaWl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU0Mzg0MDMsImV4cCI6MTk2MTAxNDQwM30.-edVClxcv7b9_CrqB8fz3jYWeox7NKI_yZWEGAqmNt8",
-        "Authorization": "Bearer" +
-            " eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kZnBwa252dnFjYm9iaWRmaWl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU0Mzg0MDMsImV4cCI6MTk2MTAxNDQwM30.-edVClxcv7b9_CrqB8fz3jYWeox7NKI_yZWEGAqmNt8",
-}
+    'Content-Type': 'application/json',
+    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdG9scXB4Y3l1eXBxdG1uemlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU2MDMyNTYsImV4cCI6MTk2MTE3OTI1Nn0.uzSvnkm6SV3kt97XytwcnISZlGeX17gVQwClv34vEWQ',
+    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdG9scXB4Y3l1eXBxdG1uemlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDU2MDMyNTYsImV4cCI6MTk2MTE3OTI1Nn0.uzSvnkm6SV3kt97XytwcnISZlGeX17gVQwClv34vEWQ'
+};
 
 Vue.createApp({
     data() {
         return {
-            APIUrl: "https://mdfppknvvqcbobidfiit.supabase.co/rest/v1/peliculas",
             peliculas: [],
+            APIUrl: 'https://vftolqpxcyuypqtmnzid.supabase.co/rest/v1/Pelicula-equipo',
+            verFormAnyadir: false,
+            nuevoNombre: '',
+            nuevaDuracion: '',
+            isLoading: false,
+            peliculasEditables: -1,
+            editarNombre: '',
+            editarDuracion: ''
         }
     },
     methods: {
-        async getPeliculas() {
-            NProgress.start();
+        getPeliculas: async function () {
+            this.isLoading = true;
             const fetchPeliculas = await fetch(`${this.APIUrl}?select=*`, { headers });
             this.peliculas = await fetchPeliculas.json();
-            NProgress.done();
-            console.table(this.peliculas);
+            this.isLoading = false;
         },
+        addPelicula: async function() {
+            this.isLoading = true;
+            // Ocultar el formulario
+            this.verFormAnyadir = false;
+            // Anyadir la pelicula a la base de datos
+            const fetchPeliculas = await fetch(this.APIUrl,
+                {
+                    headers: headers,
+                    method: 'POST',
+                    body: JSON.stringify({"name": this.nuevoNombre, "duration": this.nuevaDuracion})
+                }
+            );
+            // Reiniciamos formulario
+            this.nuevoNombre = '';
+            this.nuevaDuracion = '';
+            // Obtenemos de nuevo las peliculas
+            this.getPeliculas();
+            this.isLoading = false;
+        },
+        deletePelicula: async function (id) {
+            // Borramos de la base de datos
+            await fetch(`${this.APIUrl}?id=eq.${id}`,
+                {
+                    headers: headers,
+                    method: 'DELETE'
+                }
+            );
+            this.getPeliculas();
+        },
+        verEditarPelicula: function(id) {
+            // Mostramos el campo a editar
+            this.peliculasEditables = id;
+            // Obtenemos la informacion
+            const peliculaAEditar = this.peliculas.filter(function(pelicula) {
+                return pelicula.id === id;
+            })[0];
+            // Mostramos datos
+            this.editarNombre = peliculaAEditar.name;
+            this.editarDuracion = peliculaAEditar.duration;
+        },
+        editarPelicula: async function(id) {
+            this.isLoading = true;
+            this.peliculasEditables = -1;
+            const fetchPeliculas = await fetch(`${this.APIUrl}?id=eq.${id}`,
+                {
+                    headers: headers,
+                    method: 'PATCH',
+                    body: JSON.stringify({"name": this.editarNombre, "duration": this.editarDuracion})
+                }
+            );
+            this.getPeliculas();
+            this.isLoading = false;
+        }
     },
-    mounted() {
+    watch: {
+        isLoading(value) {
+            if(value) {
+                NProgress.start();
+            } else {
+                NProgress.done();
+            }
+        }
+    },
+    mounted: function () {
         this.getPeliculas();
-    },
+    }
 }).mount('#app')
