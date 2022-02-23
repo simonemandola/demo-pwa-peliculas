@@ -9,6 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/nprogress.css">
     <!-- JavaScript -->
     <script src="https://unpkg.com/vue@3"></script>
@@ -47,7 +48,7 @@
                     <th>duracion</th>
                     <th>acciones</th>
                 </tr>
-                <tr v-for="pelicula in peliculas">
+                <tr v-for="pelicula in peliculas" :class="{ 'desenfoque': isLoading }">
                     <td>
                         <!-- Nombre -->
                         <input v-if="peliculasEditables == pelicula.id" v-model="editarNombre" class="input" type="text" placeholder="Nombre pelicula">
@@ -67,6 +68,10 @@
                     </td>
                 </tr>
             </table>
+        </div>
+        <div class="block">
+            <button class="button" @click="pag = pag - 1" v-if="pag > 1">👈</button>
+            <button class="button" @click="pag = pag + 1">👉</button>
         </div>
     </main>
 </div>

@@ -98,6 +98,9 @@ Vue.createApp({
             } else {
                 NProgress.done();
             }
+        },
+        pag() {
+            this.getPeliculas();
         }
     },
     mounted: function () {
