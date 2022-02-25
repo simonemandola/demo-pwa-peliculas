@@ -16,6 +16,7 @@ Vue.createApp({
             nuevoNombre: '',
             nuevaDuracion: '',
             isLoading: false,
+            peliculasLength: 0,
             peliculasEditables: -1,
             editarNombre: '',
             editarDuracion: '',
@@ -23,7 +24,20 @@ Vue.createApp({
             numeroResultadosPorPagina: 5,
         }
     },
+    computed: {
+        maxPages() {
+            return Math.ceil(this.peliculasLength / this.numeroResultadosPorPagina)
+        }
+    },
     methods: {
+        async getPeliculasLength() {
+            const myHeaders = this.getHeaders();
+            myHeaders.Range = "";
+            const fetchPeliculas = await fetch(`${this.APIUrl}?select=*`, { headers: myHeaders });
+            const dataPeliculas = await fetchPeliculas.json();
+            this.peliculasLength = Math.ceil(dataPeliculas.length / this.numeroResultadosPorPagina);
+
+        },
         getHeaders() {
             const rangoInicio = (this.pag - 1) * this.numeroResultadosPorPagina;
             const rangoFinal = rangoInicio + this.numeroResultadosPorPagina;
@@ -101,9 +115,11 @@ Vue.createApp({
         },
         pag() {
             this.getPeliculas();
+            this.getPeliculasLength();
         }
     },
     mounted: function () {
         this.getPeliculas();
+        this.getPeliculasLength();
     }
 }).mount('#app')
